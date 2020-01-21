@@ -1,56 +1,56 @@
 # **Finding Lane Lines on the Road** 
-[![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
 
-<img src="examples/laneLines_thirdPass.jpg" width="480" alt="Combined Image" />
+## Writeup
 
-Overview
 ---
 
-When we drive, we use our eyes to decide where to go.  The lines on the road that show us where the lanes are act as our constant reference for where to steer the vehicle.  Naturally, one of the first things we would like to do in developing a self-driving car is to automatically detect lane lines using an algorithm.
+**Finding Lane Lines on the Road**
 
-In this project you will detect lane lines in images using Python and OpenCV.  OpenCV means "Open-Source Computer Vision", which is a package that has many useful tools for analyzing images.  
-
-To complete the project, two files will be submitted: a file containing project code and a file containing a brief write up explaining your solution. We have included template files to be used both for the [code](https://github.com/udacity/CarND-LaneLines-P1/blob/master/P1.ipynb) and the [writeup](https://github.com/udacity/CarND-LaneLines-P1/blob/master/writeup_template.md).The code file is called P1.ipynb and the writeup template is writeup_template.md 
-
-To meet specifications in the project, take a look at the requirements in the [project rubric](https://review.udacity.com/#!/rubrics/322/view)
+The goals / steps of this project are the following:
+* Make a pipeline that finds lane lines on the road
+* Reflect on your work in a written report
 
 
-Creating a Great Writeup
----
-For this project, a great writeup should provide a detailed response to the "Reflection" section of the [project rubric](https://review.udacity.com/#!/rubrics/322/view). There are three parts to the reflection:
+[//]: # (Image References)
 
-1. Describe the pipeline
+[image1]: ./test_videos_output/gray.png "Grayscale"
+[image2]: ./test_videos_output/canny.png "Canny"
+[image3]: ./test_videos_output/roi.png "Roi"
+[image4]: ./test_videos_output/hough.png "Hough"
+[image5]: ./test_videos_output/final.png "Final"
 
-2. Identify any shortcomings
-
-3. Suggest possible improvements
-
-We encourage using images in your writeup to demonstrate how your pipeline works.  
-
-All that said, please be concise!  We're not looking for you to write a book here: just a brief description.
-
-You're not required to use markdown for your writeup.  If you use another method please just submit a pdf of your writeup. Here is a link to a [writeup template file](https://github.com/udacity/CarND-LaneLines-P1/blob/master/writeup_template.md). 
-
-
-The Project
 ---
 
-## If you have already installed the [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) you should be good to go!   If not, you should install the starter kit to get started on this project. ##
+### Reflection
 
-**Step 1:** Set up the [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) if you haven't already.
+### 1. My Pipeline for Lane Detection
 
-**Step 2:** Open the code in a Jupyter Notebook
+* Convert the image from RGB colorspace to Gray colorspace using `cv2.cvtColor`
+* Blur the gray image using a Gaussian Filter of kernel size of 5
 
-You will complete the project code in a Jupyter notebook.  If you are unfamiliar with Jupyter Notebooks, check out [Udacity's free course on Anaconda and Jupyter Notebooks](https://classroom.udacity.com/courses/ud1111) to get started.
+![alt text][image1]
 
-Jupyter is an Ipython notebook where you can run blocks of code and see results interactively.  All the code for this project is contained in a Jupyter notebook. To start Jupyter in your browser, use terminal to navigate to your project directory and then run the following command at the terminal prompt (be sure you've activated your Python 3 carnd-term1 environment as described in the [CarND Term1 Starter Kit](https://github.com/udacity/CarND-Term1-Starter-Kit/blob/master/README.md) installation instructions!):
+* Detect the edges from the blurred image using the Canny Algorithm. Canny filter internally uses Sobel filters to detect all the edges in the image. Canny can be extremely sensitive to noise, hence Gaussian Blur is used first.
 
-`> jupyter notebook`
+![alt text][image2]
 
-A browser window will appear showing the contents of the current directory.  Click on the file called "P1.ipynb".  Another browser window will appear displaying the notebook.  Follow the instructions in the notebook to complete the project.  
+* Reject all the edges detected by Canny which do not lie in the Region of Interest. The Region of Interest is provided by the user for that particular case. Hence this is another parameter that needs to be tuned depending on the usecase.
 
-**Step 3:** Complete the project and submit both the Ipython notebook and the project writeup
+![alt text][image3]
 
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
+* Convert the image from Cartesian space to Hough Space and detect lines in Hough Space. Hough Space are used as line detection is easier as the lines are represented as points and points are represented as lines. Hence we can specify the number of lines intersecting in the Hough Space to consider it as a line.
 
+![alt text][image4]
+
+* Use interpolation to find complete dotted lines to represent a single line and merge it to the input image.
+
+![alt text][image5]
+
+### 2. Shortcomings of current pipeline
+
+* As the pipeline depends a lot on the canny algorithm, the parameters we use for this algorithm have to be really accurate. And as we finetune it for one particular usecase it might not work with other usecases.
+* The region of interest also will change with different use cases and as we are using a trapezoidal ROI here, an edge case can be when the lane takes a sharp turn.
+
+### 3. Possible improvements of current pipeline
+
+* We can implement an algorithm which detects the ROI itself on the basis of horizon detection. We only need to consider the area below the horizon.
